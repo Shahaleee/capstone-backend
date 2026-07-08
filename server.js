@@ -9,7 +9,8 @@ app.use(express.json());
 app.post('/api/simplify', async (req, res) => {
     const { text, targetGrade } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+    // CHANGED: Swapped gemini-1.5-flash out for the active gemini-2.5-flash model identifier
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
     // Quick safety check for your Render environment variable
     if (!API_KEY) {
@@ -27,7 +28,7 @@ app.post('/api/simplify', async (req, res) => {
         
         const data = await response.json();
 
-        // If Google sends back an API error (like an invalid key), pass it to the frontend safely
+        // If Google sends back an API error, pass it to the frontend safely
         if (data.error) {
             return res.status(400).json({ error: data.error.message });
         }
