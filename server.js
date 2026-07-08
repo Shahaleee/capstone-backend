@@ -1,16 +1,20 @@
 const express = require('express');
-const fetch = require('node-fetch');
 const cors = require('cors');
-require('dotenv').config(); // This helps read your secret key
+require('dotenv').config();
 
 const app = express();
-app.use(cors()); // Allows your frontend to talk to this server
+app.use(cors());
 app.use(express.json());
 
 app.post('/api/simplify', async (req, res) => {
     const { text, targetGrade } = req.body;
-    const API_KEY = process.env.GEMINI_API_KEY; // Key is kept safe on the server
+    const API_KEY = process.env.GEMINI_API_KEY;
     const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+
+    // Quick safety check for your Render environment variable
+    if (!API_KEY) {
+        return res.status(500).json({ error: "Backend configuration error: GEMINI_API_KEY is missing." });
+    }
 
     try {
         const response = await fetch(API_URL, {
@@ -20,10 +24,18 @@ app.post('/api/simplify', async (req, res) => {
                 contents: [{ parts: [{ text: `Simplify this for Grade ${targetGrade}: ${text}` }] }]
             })
         });
+        
         const data = await response.json();
+
+        // If Google sends back an API error (like an invalid key), pass it to the frontend safely
+        if (data.error) {
+            return res.status(400).json({ error: data.error.message });
+        }
+
         res.json(data);
     } catch (error) {
-        res.status(500).json({ error: "Failed to connect to AI" });
+        console.error("Server Error:", error);
+        res.status(500).json({ error: "Failed to connect to AI service" });
     }
 });
 
