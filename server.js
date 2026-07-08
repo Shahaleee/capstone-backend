@@ -10,7 +10,7 @@ app.post('/api/simplify', async (req, res) => {
     const { text, targetGrade } = req.body;
     const API_KEY = process.env.GEMINI_API_KEY;
     // CHANGED: Swapped gemini-1.5-flash out for the active gemini-2.5-flash model identifier
-    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
     // Quick safety check for your Render environment variable
     if (!API_KEY) {
