@@ -18,17 +18,29 @@ app.post('/api/simplify', async (req, res) => {
     }
 
     try {
+        // We create a strict instruction set for the AI so it formats cleanly
+        const systemInstruction = `You are an expert educational assistant. Simplify the following text strictly for a Grade ${targetGrade} level. 
+        
+        CRITICAL RULES:
+        1. Output ONLY plain, clean text paragraphs. 
+        2. Do NOT use any Markdown formatting, asterisks (*), or bold text (**).
+        3. Do NOT include conversational filler, introductions, or conclusions (e.g., do NOT say "Okay, imagine", "Here is your text", or "That's Bernoulli's theorem!"). Start directly with the explanation.
+        4. Make it look professional, clean, and ready for a teacher or parent to copy and paste directly into a school worksheet.`;
+
         const response = await fetch(API_URL, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: `Simplify this for Grade ${targetGrade}: ${text}` }] }]
+                contents: [{ 
+                    parts: [{ 
+                        text: `${systemInstruction}\n\nText to simplify: ${text}` 
+                    }] 
+                }]
             })
         });
         
         const data = await response.json();
 
-        // If Google sends back an API error, pass it to the frontend safely
         if (data.error) {
             return res.status(400).json({ error: data.error.message });
         }
