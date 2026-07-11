@@ -145,5 +145,39 @@ app.post('/api/analyze', async (req, res) => {
     }
 });
 
+
+app.post('/api/validate', async (req, res) => {
+    try {
+        const { text } = req.body;
+        
+        // Strict prompt forcing a JSON response
+        const prompt = `You are a strict validation filter. Analyze the following text. 
+        If it contains heavy internet slang, brainrot, keyboard mashing (e.g., asdfgh), or completely lacks standard English/academic structure, reject it.
+        Respond ONLY with a valid JSON object in this exact format: {"isValid": true/false, "reason": "Short reason if false"}.
+        Text to analyze: "${text}"`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        const data = await response.json();
+        const aiTextResponse = data.candidates[0].content.parts[0].text;
+        
+        // Strip markdown formatting if the AI includes it and parse the JSON
+        const cleanJsonString = aiTextResponse.replace(/```json\n?|```/g, '').trim();
+        const result = JSON.parse(cleanJsonString);
+
+        res.json(result);
+
+    } catch (error) {
+        console.error("Validation Error:", error);
+        res.status(500).json({ error: "Failed to validate text" });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
